@@ -74,7 +74,7 @@ public class TextExtractor {
 				exeptions.add(e.getMessage());
 			}
 		} else{
-		try {
+			try {
 				Collection<String> c = Files.walk(Paths.get(path))
 					.map(Path::toString)
 					.filter(str -> !hashCodes.contains(str.hashCode()))

@@ -135,7 +135,7 @@ public class TextExtractionTest {
 	@Test
 	public void testZipFound() {
 		try {
-			assertTrue(textExtractor.findSensitive("test.zip", "Microsoft"));
+			assertTrue(textExtractor.findSensitive("test.zip", "yes"));
 		} catch (TextExtractionException e) {
 			exp = e;
 		}

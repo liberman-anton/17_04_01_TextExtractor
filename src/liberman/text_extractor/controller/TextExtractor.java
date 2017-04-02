@@ -22,7 +22,7 @@ public class TextExtractor {
 		stack.add(path);
 		Set<Integer> hashCodes = new HashSet<>();
 		hashCodes.add(path.hashCode());
-		Boolean needCleaning = false;
+		boolean needCleaning = new Boolean(false);
 		IReader reader;
 		LinkedList<String> exeptions = new LinkedList<>();
 		
@@ -39,7 +39,8 @@ public class TextExtractor {
 						}
 					}
 					else{
-						reader.addPaths(path, stack, exeptions, needCleaning);
+						reader.addPaths(path, stack, exeptions);
+						needCleaning = true;
 					}
 				} catch (Exception e) {
 					exeptions.add(e.getMessage());
@@ -54,7 +55,7 @@ public class TextExtractor {
 		return false;
 	}
 
-	private void cleanTemp(Boolean needCleaning) {
+	private void cleanTemp(boolean needCleaning) {
 		if(!needCleaning) return;
 		needCleaning = false;
 		try {

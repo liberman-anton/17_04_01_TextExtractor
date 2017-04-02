@@ -10,10 +10,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import liberman.text_extractor.exeption.TextExtractionException;
-import liberman.text_extractor.model.Reader;
+import liberman.text_extractor.model.IReader;
+import liberman.text_extractor.model.TextReader;
 import liberman.text_extractor.model.ReaderFactory;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 
 public class TextExtractor {
 	
@@ -23,36 +22,41 @@ public class TextExtractor {
 		stack.add(path);
 		Set<Integer> hashCodes = new HashSet<>();
 		hashCodes.add(path.hashCode());
-		Set<Integer> zips = new HashSet<>();
-		Reader reader;
-		String extention;
+		Boolean needCleaning = false;
+		IReader reader;
 		LinkedList<String> exeptions = new LinkedList<>();
+		
 		while(!stack.isEmpty()){
 			path = stack.removeLast();
 			hashCodes.add(path.hashCode());
-			extention = FilenameUtils.getExtension(path);
-			if(!new File(path).isDirectory() && !"zip".equals(extention)){
+			if(!new File(path).isDirectory()){
 				try {
-					reader = ReaderFactory.getInstance(extention,exeptions);
-					if(reader.find(path,sensitive)){
-						cleanTemp(zips);
-						return true;
+					reader = ReaderFactory.getInstance(FilenameUtils.getExtension(path),exeptions);
+					if(!reader.hasPaths()){
+						if(((TextReader)reader).find(path,sensitive)){
+							cleanTemp(needCleaning);
+							return true;
+						}
+					}
+					else{
+						reader.addPaths(path, stack, exeptions, needCleaning);
 					}
 				} catch (Exception e) {
 					exeptions.add(e.getMessage());
 				}	
 			} else {
-				addPaths(path, stack, exeptions, hashCodes, extention, zips);
+				addPaths(path, stack, exeptions, hashCodes);
 			}
 		}
-		cleanTemp(zips);
+		cleanTemp(needCleaning);
 		if(!exeptions.isEmpty())
 			throw new TextExtractionException(exeptions.toString());
 		return false;
 	}
 
-	private void cleanTemp(Set<Integer> zips) {
-		if(zips.isEmpty()) return;
+	private void cleanTemp(Boolean needCleaning) {
+		if(!needCleaning) return;
+		needCleaning = false;
 		try {
 			FileUtils.cleanDirectory(new File("temp"));
 		} catch (IOException e) {
@@ -61,28 +65,15 @@ public class TextExtractor {
 	}
 
 	private void addPaths(String path, LinkedList<String> stack, 
-				LinkedList<String> exeptions, Set<Integer> hashCodes, String extention, Set<Integer> zips) {
-		if("zip".equals(extention)){
-			try {
-				ZipFile zipFile = new ZipFile(path);
-				String newPath = "temp/" + FilenameUtils.getBaseName(path);
-				zipFile.extractAll(newPath);
-				Integer hash = newPath.hashCode();
-				stack.add(newPath);
-				zips.add(hash);
-			} catch (ZipException e) {
-				exeptions.add(e.getMessage());
-			}
-		} else{
-			try {
-				Collection<String> c = Files.walk(Paths.get(path))
-					.map(Path::toString)
-					.filter(str -> !hashCodes.contains(str.hashCode()))
-					.collect(Collectors.toList());
-				stack.addAll(c);
-			} catch (Throwable e) {
-				exeptions.add(e.getMessage());
-			}
+				LinkedList<String> exeptions, Set<Integer> hashCodes) {
+		try {
+			Collection<String> c = Files.walk(Paths.get(path))
+				.map(Path::toString)
+				.filter(str -> !hashCodes.contains(str.hashCode()))
+				.collect(Collectors.toList());
+			stack.addAll(c);
+		} catch (Throwable e) {
+			exeptions.add(e.getMessage());
 		}
 	}
 }

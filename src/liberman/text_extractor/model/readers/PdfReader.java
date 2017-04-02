@@ -10,9 +10,9 @@ import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-import liberman.text_extractor.model.Reader;
+import liberman.text_extractor.model.TextReader;
 
-public class PdfReader extends Reader {
+public class PdfReader extends TextReader {
 
 	@Override
 	protected Stream<String> getStream(String path) throws IOException {
@@ -30,5 +30,4 @@ public class PdfReader extends Reader {
 		Collections.addAll(l, str.split("\n"));
 		return l.stream();
 	}
-
 }

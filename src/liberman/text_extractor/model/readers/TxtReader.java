@@ -5,9 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import liberman.text_extractor.model.Reader;
+import liberman.text_extractor.model.TextReader;
 
-public class TxtReader extends Reader {
+public class TxtReader extends TextReader {
 
 	@Override
 	protected Stream<String> getStream(String path) throws IOException {

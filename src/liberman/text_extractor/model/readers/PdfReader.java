@@ -4,11 +4,9 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Stream;
 
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.io.RandomAccessFile;
-import org.apache.pdfbox.pdfparser.PDFParser;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
+import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
+import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 
 import liberman.text_extractor.model.TextReader;
 
@@ -16,18 +14,27 @@ public class PdfReader extends TextReader {
 
 	@Override
 	protected Stream<String> getStream(String path) throws IOException {
-		File file = new File(path);
-		PDFParser parser = new PDFParser(new RandomAccessFile(file,"r")); // update for PDFBox V 2.0
-		parser.parse();
-		COSDocument cosDoc = parser.getDocument();
-		PDFTextStripper pdfStripper = new PDFTextStripper();
-		PDDocument pdDoc = new PDDocument(cosDoc);
-		pdfStripper.setStartPage(1);
-	    pdfStripper.setEndPage(pdDoc.getNumberOfPages());
-		String str = pdfStripper.getText(pdDoc);
-		pdDoc.close();cosDoc.close();
 		LinkedList<String> l = new LinkedList<>();
-		Collections.addAll(l, str.split("\n"));
+		Collections.addAll(l, extractsPdfLines(path));
 		return l.stream();
+	}
+	
+	private String[] extractsPdfLines(String PdfFile) throws IOException {
+			StringBuffer buff = new StringBuffer();
+			String ExtractedText = null;
+			com.itextpdf.text.pdf.PdfReader reader = new com.itextpdf.text.pdf.PdfReader(PdfFile);
+			PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+			TextExtractionStrategy strategy;
+
+			for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+				strategy = parser.processContent(i, new SimpleTextExtractionStrategy());
+				ExtractedText = strategy.getResultantText().toString();
+				buff.append(ExtractedText + "\n");
+			}
+
+			String[] LinesArray;
+			LinesArray = buff.toString().split("\n");
+			reader.close();
+			return LinesArray;
 	}
 }
